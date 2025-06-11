@@ -155,43 +155,94 @@ const NewReleases = () => {
       )}
 
       {/* Список новинок */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
         {songs.map((song) => (
           <div key={song.id} className="text-center group">
-            {/* Обложка с бейджем "Новинка" */}
-            <div className="relative mb-3">
-              <img
-                src={song.cover}
-                alt={song.title}
-                className="w-[200px] h-[200px] object-cover rounded-lg shadow-lg group-hover:shadow-xl transition-shadow"
-              />
-              {/* Бейдж "Новинка" */}
-              <div className="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                Новинка
+            {/* Обложка с красивым дизайном */}
+            <div className="relative mb-4">
+              <div
+                className={`relative overflow-hidden rounded-xl shadow-2xl transition-all duration-500 group-hover:scale-105 ${
+                  currentPlaying === song.id
+                    ? "ring-4 ring-purple-400 ring-opacity-75 shadow-purple-500/50"
+                    : "shadow-black/30"
+                }`}
+              >
+                <img
+                  src={song.cover}
+                  alt={song.title}
+                  className="w-[200px] h-[200px] object-cover"
+                />
+                {/* Градиентный оверлей */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                {/* Бейдж "Новинка" с анимацией */}
+                <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
+                  ✨ Новинка
+                </div>
+
+                {/* Пульсирующий индикатор воспроизведения */}
+                {currentPlaying === song.id && (
+                  <div className="absolute inset-0 rounded-xl">
+                    <div className="absolute inset-0 rounded-xl bg-purple-400/20 animate-pulse" />
+                    <div className="absolute top-4 left-4">
+                      <div className="flex space-x-1">
+                        <div
+                          className="w-1 h-4 bg-white rounded-full animate-bounce"
+                          style={{ animationDelay: "0ms" }}
+                        />
+                        <div
+                          className="w-1 h-4 bg-white rounded-full animate-bounce"
+                          style={{ animationDelay: "150ms" }}
+                        />
+                        <div
+                          className="w-1 h-4 bg-white rounded-full animate-bounce"
+                          style={{ animationDelay: "300ms" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Название трека */}
-            <h3 className="text-white font-medium mb-3 truncate">
+            {/* Название трека с красивым шрифтом */}
+            <h3 className="text-white font-semibold mb-4 truncate text-lg tracking-wide">
               {song.title}
             </h3>
 
-            {/* Кнопка Play */}
-            <Button
-              onClick={() => handlePlay(song.id)}
-              className={`w-full ${
-                currentPlaying === song.id
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-purple-600 hover:bg-purple-700"
+            {/* Красивая кнопка плеера */}
+            <div
+              className={`relative transition-all duration-300 ${
+                currentPlaying === song.id ? "animate-pulse" : ""
               }`}
             >
-              <Icon
-                name={currentPlaying === song.id ? "Pause" : "Play"}
-                size={16}
-                className="mr-2"
-              />
-              {currentPlaying === song.id ? "Пауза" : "Играть"}
-            </Button>
+              <button
+                onClick={() => handlePlay(song.id)}
+                className={`relative w-full py-3 px-6 rounded-full font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-opacity-50 ${
+                  currentPlaying === song.id
+                    ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/40 focus:ring-green-400"
+                    : "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30 hover:from-purple-500 hover:to-indigo-500 focus:ring-purple-400"
+                }`}
+              >
+                <div className="flex items-center justify-center space-x-2">
+                  <Icon
+                    name={currentPlaying === song.id ? "Pause" : "Play"}
+                    size={18}
+                    className={
+                      currentPlaying === song.id ? "animate-pulse" : ""
+                    }
+                  />
+                  <span className="font-semibold">
+                    {currentPlaying === song.id ? "⏸️ Пауза" : "▶️ Играть"}
+                  </span>
+                </div>
+
+                {/* Эффект свечения при активном плеере */}
+                {currentPlaying === song.id && (
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400/30 to-emerald-400/30 animate-ping" />
+                )}
+              </button>
+            </div>
           </div>
         ))}
       </div>
