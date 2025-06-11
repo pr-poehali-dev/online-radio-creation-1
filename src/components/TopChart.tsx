@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Icon from "@/components/ui/icon";
 
 interface Song {
@@ -6,17 +6,24 @@ interface Song {
   position: number;
   title: string;
   artist: string;
+  audioFile?: string;
+  likes: number;
+  dislikes: number;
   addedAt: Date;
 }
 
 const TopChart = () => {
   const [songs, setSongs] = useState<Song[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<number | null>(null);
   const [newSong, setNewSong] = useState({
     title: "",
     artist: "",
     position: 1,
+    audioFile: null as File | null,
   });
+
+  const audioRefs = useRef<{ [key: number]: HTMLAudioElement }>({});
 
   useEffect(() => {
     const savedSongs = localStorage.getItem("topChartSongs");
@@ -30,14 +37,29 @@ const TopChart = () => {
     setSongs(updatedSongs);
   };
 
-  const addSong = () => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("audio/")) {
+      setNewSong({ ...newSong, audioFile: file });
+    }
+  };
+
+  const addSong = async () => {
     if (!newSong.title.trim() || !newSong.artist.trim()) return;
+
+    let audioFileUrl = "";
+    if (newSong.audioFile) {
+      audioFileUrl = URL.createObjectURL(newSong.audioFile);
+    }
 
     const song: Song = {
       id: Date.now(),
       position: newSong.position,
       title: newSong.title.trim(),
       artist: newSong.artist.trim(),
+      audioFile: audioFileUrl,
+      likes: 0,
+      dislikes: 0,
       addedAt: new Date(),
     };
 
@@ -46,12 +68,47 @@ const TopChart = () => {
     );
     saveSongs(updatedSongs);
 
-    setNewSong({ title: "", artist: "", position: 1 });
+    setNewSong({ title: "", artist: "", position: 1, audioFile: null });
     setIsAddingNew(false);
   };
 
   const removeSong = (id: number) => {
     const updatedSongs = songs.filter((song) => song.id !== id);
+    saveSongs(updatedSongs);
+  };
+
+  const togglePlay = (songId: number) => {
+    const audio = audioRefs.current[songId];
+    if (!audio) return;
+
+    // Остановить все другие треки
+    Object.entries(audioRefs.current).forEach(([id, audioEl]) => {
+      if (parseInt(id) !== songId) {
+        audioEl.pause();
+        audioEl.currentTime = 0;
+      }
+    });
+
+    if (currentlyPlaying === songId) {
+      audio.pause();
+      setCurrentlyPlaying(null);
+    } else {
+      audio.play();
+      setCurrentlyPlaying(songId);
+    }
+  };
+
+  const handleLike = (songId: number, isLike: boolean) => {
+    const updatedSongs = songs.map((song) => {
+      if (song.id === songId) {
+        return {
+          ...song,
+          likes: isLike ? song.likes + 1 : song.likes,
+          dislikes: !isLike ? song.dislikes + 1 : song.dislikes,
+        };
+      }
+      return song;
+    });
     saveSongs(updatedSongs);
   };
 
@@ -117,6 +174,22 @@ const TopChart = () => {
               }
               className="w-full px-3 py-2 bg-white/10 border border-purple-300/30 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:border-purple-300"
             />
+            <div className="space-y-2">
+              <label className="block text-purple-300 text-sm">
+                Загрузить аудиофайл
+              </label>
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={handleFileSelect}
+                className="w-full px-3 py-2 bg-white/10 border border-purple-300/30 rounded-lg text-white file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-purple-600 file:text-white hover:file:bg-purple-700"
+              />
+              {newSong.audioFile && (
+                <p className="text-purple-300 text-xs">
+                  Выбран файл: {newSong.audioFile.name}
+                </p>
+              )}
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={addSong}
@@ -149,6 +222,7 @@ const TopChart = () => {
               <span className="text-lg font-bold text-purple-300 min-w-[2rem]">
                 {getPositionIcon(song.position)}
               </span>
+
               <div className="flex-1 min-w-0">
                 <p className="text-white font-medium text-sm truncate">
                   {song.title}
@@ -157,6 +231,47 @@ const TopChart = () => {
                   {song.artist}
                 </p>
               </div>
+
+              {/* Плеер */}
+              {song.audioFile && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => togglePlay(song.id)}
+                    className="text-purple-300 hover:text-white transition-colors"
+                  >
+                    <Icon
+                      name={currentlyPlaying === song.id ? "Pause" : "Play"}
+                      size={16}
+                    />
+                  </button>
+                  <audio
+                    ref={(el) => {
+                      if (el) audioRefs.current[song.id] = el;
+                    }}
+                    src={song.audioFile}
+                    onEnded={() => setCurrentlyPlaying(null)}
+                  />
+                </div>
+              )}
+
+              {/* Лайки/дизлайки */}
+              <div className="flex items-center gap-2 text-xs">
+                <button
+                  onClick={() => handleLike(song.id, true)}
+                  className="flex items-center gap-1 text-green-400 hover:text-green-300 transition-colors"
+                >
+                  <Icon name="ThumbsUp" size={14} />
+                  <span>{song.likes}</span>
+                </button>
+                <button
+                  onClick={() => handleLike(song.id, false)}
+                  className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Icon name="ThumbsDown" size={14} />
+                  <span>{song.dislikes}</span>
+                </button>
+              </div>
+
               <button
                 onClick={() => removeSong(song.id)}
                 className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all"
