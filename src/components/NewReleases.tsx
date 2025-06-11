@@ -1,251 +1,359 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import Icon from "@/components/ui/icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Icon from "@/components/ui/icon";
 
 interface Song {
-  id: number;
+  id: string;
   title: string;
-  cover: string;
-  audioFile: string;
+  artist: string;
+  coverUrl: string;
+  audioUrl: string;
+  addedAt: Date;
 }
 
 const NewReleases = () => {
-  const [songs, setSongs] = useState<Song[]>([
-    {
-      id: 1,
-      title: "Summer Vibes",
-      cover:
-        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=200&h=200&fit=crop",
-      audioFile: "",
-    },
-    {
-      id: 2,
-      title: "Night Dreams",
-      cover:
-        "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=200&h=200&fit=crop",
-      audioFile: "",
-    },
-  ]);
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
+  const [audioRefs, setAudioRefs] = useState<{
+    [key: string]: HTMLAudioElement;
+  }>({});
 
-  const [currentPlaying, setCurrentPlaying] = useState<number | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [newSong, setNewSong] = useState({
+  // Форма для добавления песни
+  const [formData, setFormData] = useState({
     title: "",
-    cover: null as File | null,
+    artist: "",
+    coverFile: null as File | null,
     audioFile: null as File | null,
   });
 
-  const handlePlay = (songId: number) => {
+  // Проверка админа (простая проверка по паролю)
+  const handleAdminLogin = () => {
+    const password = prompt("Введите пароль администратора:");
+    if (password === "admin123") {
+      setIsAdmin(true);
+      setShowAdminPanel(true);
+    } else {
+      alert("Неверный пароль!");
+    }
+  };
+
+  // Создание URL для файлов
+  const createFileUrl = (file: File) => {
+    return URL.createObjectURL(file);
+  };
+
+  // Добавление новой песни
+  const handleAddSong = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (
+      !formData.title ||
+      !formData.artist ||
+      !formData.coverFile ||
+      !formData.audioFile
+    ) {
+      alert("Заполните все поля!");
+      return;
+    }
+
+    const newSong: Song = {
+      id: Date.now().toString(),
+      title: formData.title,
+      artist: formData.artist,
+      coverUrl: createFileUrl(formData.coverFile),
+      audioUrl: createFileUrl(formData.audioFile),
+      addedAt: new Date(),
+    };
+
+    setSongs((prev) => [newSong, ...prev]);
+
+    // Сброс формы
+    setFormData({
+      title: "",
+      artist: "",
+      coverFile: null,
+      audioFile: null,
+    });
+
+    // Сброс input файлов
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach((input: any) => (input.value = ""));
+  };
+
+  // Управление воспроизведением
+  const togglePlay = (songId: string, audioUrl: string) => {
+    // Останавливаем все остальные треки
+    Object.values(audioRefs).forEach((audio) => {
+      if (audio && !audio.paused) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    });
+
     if (currentPlaying === songId) {
+      // Останавливаем текущий трек
+      const audio = audioRefs[songId];
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
       setCurrentPlaying(null);
     } else {
+      // Запускаем новый трек
+      let audio = audioRefs[songId];
+      if (!audio) {
+        audio = new Audio(audioUrl);
+        audio.volume = 0.7;
+        setAudioRefs((prev) => ({ ...prev, [songId]: audio }));
+
+        audio.addEventListener("ended", () => {
+          setCurrentPlaying(null);
+        });
+      }
+
+      audio.play().catch(console.error);
       setCurrentPlaying(songId);
     }
   };
 
-  const handleFileChange = (type: "cover" | "audioFile", file: File | null) => {
-    setNewSong((prev) => ({ ...prev, [type]: file }));
-  };
+  // Удаление песни (только для админа)
+  const handleDeleteSong = (songId: string) => {
+    if (window.confirm("Удалить эту песню?")) {
+      setSongs((prev) => prev.filter((song) => song.id !== songId));
 
-  const handleAddSong = () => {
-    if (newSong.title && newSong.cover) {
-      const coverUrl = URL.createObjectURL(newSong.cover);
-      const audioUrl = newSong.audioFile
-        ? URL.createObjectURL(newSong.audioFile)
-        : "";
+      // Останавливаем и удаляем аудио
+      const audio = audioRefs[songId];
+      if (audio) {
+        audio.pause();
+        URL.revokeObjectURL(audio.src);
+      }
+      setAudioRefs((prev) => {
+        const newRefs = { ...prev };
+        delete newRefs[songId];
+        return newRefs;
+      });
 
-      const song: Song = {
-        id: songs.length + 1,
-        title: newSong.title,
-        cover: coverUrl,
-        audioFile: audioUrl,
-      };
-
-      setSongs((prev) => [song, ...prev]);
-      setNewSong({ title: "", cover: null, audioFile: null });
-      setShowForm(false);
+      if (currentPlaying === songId) {
+        setCurrentPlaying(null);
+      }
     }
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white">🎵 Новинки песен</h2>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-purple-600 hover:bg-purple-700"
-        >
-          <Icon name="Plus" size={16} className="mr-2" />
-          Добавить трек
-        </Button>
+    <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-700/50">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <Icon name="Music" size={24} className="text-purple-400" />
+          Новинки
+        </h2>
+
+        {!isAdmin ? (
+          <Button
+            onClick={handleAdminLogin}
+            variant="outline"
+            size="sm"
+            className="text-gray-300 border-gray-600 hover:bg-gray-700"
+          >
+            <Icon name="Settings" size={16} />
+            Админ
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowAdminPanel(!showAdminPanel)}
+              variant="outline"
+              size="sm"
+              className="text-gray-300 border-gray-600 hover:bg-gray-700"
+            >
+              <Icon name={showAdminPanel ? "X" : "Plus"} size={16} />
+              {showAdminPanel ? "Закрыть" : "Добавить"}
+            </Button>
+            <Button
+              onClick={() => setIsAdmin(false)}
+              variant="outline"
+              size="sm"
+              className="text-red-400 border-red-600 hover:bg-red-700/20"
+            >
+              <Icon name="LogOut" size={16} />
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Форма добавления */}
-      {showForm && (
-        <div className="bg-white/5 rounded-lg p-4 mb-6">
+      {/* Административная панель */}
+      {isAdmin && showAdminPanel && (
+        <div className="mb-6 p-4 bg-gray-900/50 rounded-lg border border-gray-600">
           <h3 className="text-lg font-semibold text-white mb-4">
-            Добавить новый трек
+            Добавить новую песню
           </h3>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title" className="text-white">
-                Название трека
-              </Label>
-              <Input
-                id="title"
-                value={newSong.title}
-                onChange={(e) =>
-                  setNewSong((prev) => ({ ...prev, title: e.target.value }))
-                }
-                placeholder="Введите название..."
-                className="bg-white/10 border-white/20 text-white"
-              />
-            </div>
 
-            <div>
-              <Label htmlFor="cover" className="text-white">
-                Обложка (200x200)
-              </Label>
-              <Input
-                id="cover"
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  handleFileChange("cover", e.target.files?.[0] || null)
-                }
-                className="bg-white/10 border-white/20 text-white"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="audio" className="text-white">
-                Аудио файл
-              </Label>
-              <Input
-                id="audio"
-                type="file"
-                accept="audio/*"
-                onChange={(e) =>
-                  handleFileChange("audioFile", e.target.files?.[0] || null)
-                }
-                className="bg-white/10 border-white/20 text-white"
-              />
-            </div>
-
-            <div className="flex space-x-3">
-              <Button
-                onClick={handleAddSong}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Icon name="Check" size={16} className="mr-2" />
-                Добавить
-              </Button>
-              <Button
-                onClick={() => setShowForm(false)}
-                variant="outline"
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                Отмена
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Список новинок */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
-        {songs.map((song) => (
-          <div key={song.id} className="text-center group">
-            {/* Обложка с красивым дизайном */}
-            <div className="relative mb-4">
-              <div
-                className={`relative overflow-hidden rounded-xl shadow-2xl transition-all duration-500 group-hover:scale-105 ${
-                  currentPlaying === song.id
-                    ? "ring-4 ring-purple-400 ring-opacity-75 shadow-purple-500/50"
-                    : "shadow-black/30"
-                }`}
-              >
-                <img
-                  src={song.cover}
-                  alt={song.title}
-                  className="w-[200px] h-[200px] object-cover"
+          <form onSubmit={handleAddSong} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title" className="text-gray-300">
+                  Название песни
+                </Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                  }
+                  className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="Введите название"
                 />
-                {/* Градиентный оверлей */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </div>
 
-                {/* Бейдж "Новинка" с анимацией */}
-                <div className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
-                  ✨ Новинка
-                </div>
-
-                {/* Пульсирующий индикатор воспроизведения */}
-                {currentPlaying === song.id && (
-                  <div className="absolute inset-0 rounded-xl">
-                    <div className="absolute inset-0 rounded-xl bg-purple-400/20 animate-pulse" />
-                    <div className="absolute top-4 left-4">
-                      <div className="flex space-x-1">
-                        <div
-                          className="w-1 h-4 bg-white rounded-full animate-bounce"
-                          style={{ animationDelay: "0ms" }}
-                        />
-                        <div
-                          className="w-1 h-4 bg-white rounded-full animate-bounce"
-                          style={{ animationDelay: "150ms" }}
-                        />
-                        <div
-                          className="w-1 h-4 bg-white rounded-full animate-bounce"
-                          style={{ animationDelay: "300ms" }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
+              <div>
+                <Label htmlFor="artist" className="text-gray-300">
+                  Исполнитель
+                </Label>
+                <Input
+                  id="artist"
+                  value={formData.artist}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, artist: e.target.value }))
+                  }
+                  className="bg-gray-800 border-gray-600 text-white"
+                  placeholder="Введите исполнителя"
+                />
               </div>
             </div>
 
-            {/* Название трека с красивым шрифтом */}
-            <h3 className="text-white font-semibold mb-4 truncate text-lg tracking-wide">
-              {song.title}
-            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="cover" className="text-gray-300">
+                  Обложка (200x200px)
+                </Label>
+                <Input
+                  id="cover"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      coverFile: e.target.files?.[0] || null,
+                    }))
+                  }
+                  className="bg-gray-800 border-gray-600 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded"
+                />
+              </div>
 
-            {/* Красивая кнопка плеера */}
-            <div
-              className={`relative transition-all duration-300 ${
-                currentPlaying === song.id ? "animate-pulse" : ""
-              }`}
+              <div>
+                <Label htmlFor="audio" className="text-gray-300">
+                  Аудиофайл
+                </Label>
+                <Input
+                  id="audio"
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      audioFile: e.target.files?.[0] || null,
+                    }))
+                  }
+                  className="bg-gray-800 border-gray-600 text-white file:bg-purple-600 file:text-white file:border-0 file:rounded"
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
             >
-              <button
-                onClick={() => handlePlay(song.id)}
-                className={`relative w-full py-3 px-6 rounded-full font-medium transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-opacity-50 ${
-                  currentPlaying === song.id
-                    ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/40 focus:ring-green-400"
-                    : "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30 hover:from-purple-500 hover:to-indigo-500 focus:ring-purple-400"
-                }`}
+              <Icon name="Plus" size={16} className="mr-2" />
+              Добавить песню
+            </Button>
+          </form>
+        </div>
+      )}
+
+      {/* Сетка песен */}
+      {songs.length === 0 ? (
+        <div className="text-center py-12 text-gray-400">
+          <Icon name="Music" size={48} className="mx-auto mb-4 opacity-50" />
+          <p>Пока нет добавленных песен</p>
+          {isAdmin && (
+            <p className="text-sm mt-2">
+              Добавьте первую песню через панель администратора
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {songs.map((song) => (
+            <div key={song.id} className="relative group">
+              <div
+                className="relative w-full aspect-square rounded-lg overflow-hidden cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                onClick={() => togglePlay(song.id, song.audioUrl)}
               >
-                <div className="flex items-center justify-center space-x-2">
-                  <Icon
-                    name={currentPlaying === song.id ? "Pause" : "Play"}
-                    size={18}
-                    className={
-                      currentPlaying === song.id ? "animate-pulse" : ""
-                    }
-                  />
-                  <span className="font-semibold">
-                    {currentPlaying === song.id ? "⏸️ Пауза" : "▶️ Играть"}
-                  </span>
+                {/* Обложка */}
+                <img
+                  src={song.coverUrl}
+                  alt={`${song.title} - ${song.artist}`}
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Оверлей с плеером */}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div
+                    className={`w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center ${currentPlaying === song.id ? "animate-pulse bg-purple-500/40" : ""}`}
+                  >
+                    <Icon
+                      name={currentPlaying === song.id ? "Pause" : "Play"}
+                      size={24}
+                      className="text-white ml-1"
+                    />
+                  </div>
                 </div>
 
-                {/* Эффект свечения при активном плеере */}
+                {/* Индикатор воспроизведения */}
                 {currentPlaying === song.id && (
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400/30 to-emerald-400/30 animate-ping" />
+                  <div className="absolute top-2 right-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  </div>
                 )}
-              </button>
+
+                {/* Кнопка удаления для админа */}
+                {isAdmin && (
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteSong(song.id);
+                    }}
+                    size="sm"
+                    variant="destructive"
+                    className="absolute top-2 left-2 w-8 h-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Icon name="Trash2" size={14} />
+                  </Button>
+                )}
+              </div>
+
+              {/* Информация о песне */}
+              <div className="mt-2 text-center">
+                <h4
+                  className="text-white font-medium text-sm truncate"
+                  title={song.title}
+                >
+                  {song.title}
+                </h4>
+                <p
+                  className="text-gray-400 text-xs truncate"
+                  title={song.artist}
+                >
+                  {song.artist}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

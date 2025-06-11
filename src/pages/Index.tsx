@@ -4,6 +4,7 @@ import ListenerCounter from "@/components/ListenerCounter";
 import LikeSystem from "@/components/LikeSystem";
 import LiveChat from "@/components/LiveChat";
 import OrderForms from "@/components/OrderForms";
+import NewReleases from "@/components/NewReleases";
 
 const Index = () => {
   React.useEffect(() => {
@@ -61,6 +62,11 @@ const Index = () => {
           <div>
             <OrderForms />
           </div>
+        </div>
+
+        {/* Блок новинок */}
+        <div className="mt-8">
+          <NewReleases />
         </div>
 
         {/* Подвал */}
