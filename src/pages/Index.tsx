@@ -4,7 +4,6 @@ import ListenerCounter from "@/components/ListenerCounter";
 import LikeSystem from "@/components/LikeSystem";
 import LiveChat from "@/components/LiveChat";
 import OrderForms from "@/components/OrderForms";
-import TopChartPreview from "@/components/TopChartPreview";
 import NewReleases from "@/components/NewReleases";
 
 const Index = () => {
