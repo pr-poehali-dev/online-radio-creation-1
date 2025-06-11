@@ -4,7 +4,7 @@ import ListenerCounter from "@/components/ListenerCounter";
 import LikeSystem from "@/components/LikeSystem";
 import LiveChat from "@/components/LiveChat";
 import OrderForms from "@/components/OrderForms";
-import TopChart from "@/components/TopChart";
+import TopChartPreview from "@/components/TopChartPreview";
 import NewReleases from "@/components/NewReleases";
 
 const Index = () => {
@@ -67,9 +67,9 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Топ чарт */}
-        <div className="space-y-6">
-          <TopChart />
+        {/* Топ чарт превью */}
+        <div className="mt-8">
+          <TopChartPreview />
         </div>
 
         {/* Новинки песен */}
