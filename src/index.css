@@ -97,5 +97,25 @@
 
   body {
     @apply bg-background text-foreground;
+    scroll-behavior: smooth;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .no-scroll-jump {
+    scroll-margin-top: 0;
+    scroll-behavior: auto;
+  }
+
+  /* Предотвращение автоматического скролла при загрузке страницы */
+  .no-scroll-jump {
+    overscroll-behavior: contain;
+  }
+
+  /* Фиксация позиции при перезагрузке */
+  html {
+    scroll-restoration: manual;
   }
 }
