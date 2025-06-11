@@ -5,6 +5,7 @@ import LikeSystem from "@/components/LikeSystem";
 import LiveChat from "@/components/LiveChat";
 import OrderForms from "@/components/OrderForms";
 import TopChart from "@/components/TopChart";
+import NewReleases from "@/components/NewReleases";
 
 const Index = () => {
   return (
@@ -53,6 +54,11 @@ const Index = () => {
         {/* Топ чарт */}
         <div className="space-y-6">
           <TopChart />
+        </div>
+
+        {/* Новинки песен */}
+        <div className="mt-8">
+          <NewReleases />
         </div>
 
         {/* Подвал */}
