@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Icon from "@/components/ui/icon";
-import emailjs from "@emailjs/browser";
 
 const OrderForms = () => {
   const [activeForm, setActiveForm] = useState<string | null>(null);
@@ -15,100 +14,60 @@ const OrderForms = () => {
     contact: "",
     description: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Инициализация EmailJS
-  React.useEffect(() => {
-    emailjs.init("YOUR_PUBLIC_KEY"); // Замените на ваш Public Key из EmailJS
-  }, []);
+  const whatsappNumber = "79049808275";
 
-  const handleTrackSubmit = async (e: React.FormEvent) => {
+  const handleTrackSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    try {
-      await emailjs.send(
-        "YOUR_SERVICE_ID", // Замените на ваш Service ID
-        "YOUR_TEMPLATE_ID", // Замените на ваш Template ID
-        {
-          to_email: "toly.akuloff@yandex.ru",
-          subject: "🎵 Заказ трека с радиостанции",
-          message: `Новый заказ трека:
+    const message = `🎵 *Заказ трека с радиостанции*
 
-Трек: ${trackOrder.track}
-Желаемое время: ${trackOrder.time}
+*Трек:* ${trackOrder.track}
+*Желаемое время:* ${trackOrder.time}
 
-Заказ поступил: ${new Date().toLocaleString("ru-RU")}`,
-        },
-      );
+_Заказ поступил: ${new Date().toLocaleString("ru-RU")}_`;
 
-      alert(
-        `Заказ принят! Трек "${trackOrder.track}" будет воспроизведён в ${trackOrder.time}`,
-      );
-      setTrackOrder({ track: "", time: "" });
-      setActiveForm(null);
-    } catch (error) {
-      console.error("Ошибка отправки:", error);
-      alert("Произошла ошибка при отправке заказа. Попробуйте ещё раз.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+
+    setTrackOrder({ track: "", time: "" });
+    setActiveForm(null);
   };
 
-  const handleGreetingSubmit = async (e: React.FormEvent) => {
+  const handleGreetingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    try {
-      await emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
-        to_email: "toly.akuloff@yandex.ru",
-        subject: "💌 Новый привет с радиостанции",
-        message: `Новое сообщение-привет:
+    const message = `💌 *Новый привет с радиостанции*
 
-От: ${greeting.fromName}
-Для: ${greeting.toName}
-Сообщение: ${greeting.message}
+*От:* ${greeting.fromName}
+*Для:* ${greeting.toName}
+*Сообщение:* ${greeting.message}
 
-Отправлено: ${new Date().toLocaleString("ru-RU")}`,
-      });
+_Отправлено: ${new Date().toLocaleString("ru-RU")}_`;
 
-      alert(`Привет от ${greeting.fromName} для ${greeting.toName} отправлен!`);
-      setGreeting({ fromName: "", toName: "", message: "" });
-      setActiveForm(null);
-    } catch (error) {
-      console.error("Ошибка отправки:", error);
-      alert("Произошла ошибка при отправке привета. Попробуйте ещё раз.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+
+    setGreeting({ fromName: "", toName: "", message: "" });
+    setActiveForm(null);
   };
 
-  const handleSongSubmit = async (e: React.FormEvent) => {
+  const handleSongSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    try {
-      await emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
-        to_email: "toly.akuloff@yandex.ru",
-        subject: "🎤 Заказ собственной песни",
-        message: `Заказ собственной песни:
+    const message = `🎤 *Заказ собственной песни*
 
-Имя: ${songRequest.name}
-Контакт: ${songRequest.contact}
-Описание песни: ${songRequest.description}
+*Имя:* ${songRequest.name}
+*Контакт:* ${songRequest.contact}
+*Описание песни:* ${songRequest.description}
 
-Заказ поступил: ${new Date().toLocaleString("ru-RU")}`,
-      });
+_Заказ поступил: ${new Date().toLocaleString("ru-RU")}_`;
 
-      alert(`Заказ песни от ${songRequest.name} принят! Мы свяжемся с вами.`);
-      setSongRequest({ name: "", contact: "", description: "" });
-      setActiveForm(null);
-    } catch (error) {
-      console.error("Ошибка отправки:", error);
-      alert("Произошла ошибка при отправке заказа песни. Попробуйте ещё раз.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+
+    setSongRequest({ name: "", contact: "", description: "" });
+    setActiveForm(null);
   };
 
   return (
@@ -173,10 +132,9 @@ const OrderForms = () => {
           />
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
           >
-            {isSubmitting ? "Отправка..." : "Отправить заказ"}
+            Отправить в WhatsApp
           </button>
         </form>
       )}
@@ -219,10 +177,9 @@ const OrderForms = () => {
           />
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
           >
-            {isSubmitting ? "Отправка..." : "Отправить привет"}
+            Отправить в WhatsApp
           </button>
         </form>
       )}
@@ -270,10 +227,9 @@ const OrderForms = () => {
           />
           <button
             type="submit"
-            disabled={isSubmitting}
-            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
           >
-            {isSubmitting ? "Отправка..." : "Отправить заказ"}
+            Отправить в WhatsApp
           </button>
         </form>
       )}
