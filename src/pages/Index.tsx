@@ -64,7 +64,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Блок новинок */}
+        {/* Блок новинок - сразу после чата */}
         <div className="mt-8">
           <NewReleases />
         </div>
