@@ -15,6 +15,7 @@ const LiveChat = () => {
   const [currentUser] = useState(
     `Пользователь${Math.floor(Math.random() * 1000)}`,
   );
+  const [onlineUsers, setOnlineUsers] = useState(10000);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const sampleMessages = [
@@ -84,6 +85,68 @@ const LiveChat = () => {
     "😘",
   ];
 
+  // Загружаем сохраненные сообщения при загрузке
+  useEffect(() => {
+    const savedMessages = localStorage.getItem("radioNoumi_chatMessages");
+    if (savedMessages) {
+      const parsedMessages = JSON.parse(savedMessages).map((msg: any) => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp),
+      }));
+      setMessages(parsedMessages);
+    }
+  }, []);
+
+  // Сохраняем сообщения в localStorage при изменении
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem("radioNoumi_chatMessages", JSON.stringify(messages));
+    }
+  }, [messages]);
+
+  // Управляем счетчиком онлайн пользователей
+  useEffect(() => {
+    // Загружаем сохраненное количество пользователей
+    const savedUsers = localStorage.getItem("radioNoumi_onlineUsers");
+    const savedTimestamp = localStorage.getItem("radioNoumi_lastUpdate");
+
+    if (savedUsers && savedTimestamp) {
+      const lastUpdate = new Date(savedTimestamp);
+      const now = new Date();
+      const hoursPassed = Math.floor(
+        (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60),
+      );
+
+      if (hoursPassed > 0) {
+        const newUserCount =
+          parseInt(savedUsers) +
+          hoursPassed * Math.floor(Math.random() * 50 + 20);
+        setOnlineUsers(newUserCount);
+        localStorage.setItem("radioNoumi_onlineUsers", newUserCount.toString());
+        localStorage.setItem("radioNoumi_lastUpdate", now.toISOString());
+      } else {
+        setOnlineUsers(parseInt(savedUsers));
+      }
+    } else {
+      // Первый запуск - устанавливаем 10,000
+      setOnlineUsers(10000);
+      localStorage.setItem("radioNoumi_onlineUsers", "10000");
+      localStorage.setItem("radioNoumi_lastUpdate", new Date().toISOString());
+    }
+
+    // Обновляем каждый час
+    const interval = setInterval(() => {
+      setOnlineUsers((prev) => {
+        const newCount = prev + Math.floor(Math.random() * 50 + 20);
+        localStorage.setItem("radioNoumi_onlineUsers", newCount.toString());
+        localStorage.setItem("radioNoumi_lastUpdate", new Date().toISOString());
+        return newCount;
+      });
+    }, 3600000); // 1 час = 3,600,000 мс
+
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     // Добавляем случайные сообщения
     const interval = setInterval(
@@ -98,7 +161,7 @@ const LiveChat = () => {
           emoji: randomMessage.emoji,
         };
 
-        setMessages((prev) => [...prev.slice(-20), newMsg]); // Храним только последние 20 сообщений
+        setMessages((prev) => [...prev, newMsg]);
       },
       3000 + Math.random() * 5000,
     );
@@ -129,10 +192,18 @@ const LiveChat = () => {
 
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 h-96 flex flex-col">
-      <div className="flex items-center space-x-2 mb-3">
-        <Icon name="MessageCircle" size={20} className="text-purple-300" />
-        <h3 className="text-lg font-semibold text-white">Живой чат</h3>
-        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          <Icon name="MessageCircle" size={20} className="text-purple-300" />
+          <h3 className="text-lg font-semibold text-white">Живой чат</h3>
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+        </div>
+        <div className="flex items-center space-x-2 text-green-400">
+          <Icon name="Users" size={16} />
+          <span className="text-sm font-medium">
+            {onlineUsers.toLocaleString()}
+          </span>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-2 mb-3">
