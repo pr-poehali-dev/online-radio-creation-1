@@ -4,6 +4,7 @@ import ListenerCounter from "@/components/ListenerCounter";
 import LikeSystem from "@/components/LikeSystem";
 import LiveChat from "@/components/LiveChat";
 import OrderForms from "@/components/OrderForms";
+import TopChart from "@/components/TopChart";
 
 const Index = () => {
   return (
@@ -47,6 +48,11 @@ const Index = () => {
           <div>
             <OrderForms />
           </div>
+        </div>
+
+        {/* Топ чарт */}
+        <div className="space-y-6">
+          <TopChart />
         </div>
 
         {/* Подвал */}
