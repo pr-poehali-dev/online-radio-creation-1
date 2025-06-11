@@ -129,6 +129,6 @@
   }
 
   body:not(.loaded) {
-    overflow: hidden;
+    overflow: auto;
   }
 }

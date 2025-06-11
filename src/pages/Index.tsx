@@ -9,15 +9,25 @@ import NewReleases from "@/components/NewReleases";
 
 const Index = () => {
   React.useEffect(() => {
+    // Всегда прокручиваем наверх при загрузке
     window.scrollTo(0, 0);
     document.body.classList.add("loaded");
 
-    const preventScroll = (e: Event) => e.preventDefault();
-    window.addEventListener("scroll", preventScroll, { passive: false });
+    // Функция для автоматического возврата наверх
+    const handleScroll = () => {
+      // Небольшая задержка для плавности
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 50);
+    };
 
-    setTimeout(() => {
-      window.removeEventListener("scroll", preventScroll);
-    }, 100);
+    // Добавляем обработчик скролла
+    window.addEventListener("scroll", handleScroll);
+
+    // Очищаем обработчик при размонтировании
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   return (
