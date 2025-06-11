@@ -4,32 +4,8 @@ import ListenerCounter from "@/components/ListenerCounter";
 import LikeSystem from "@/components/LikeSystem";
 import LiveChat from "@/components/LiveChat";
 import OrderForms from "@/components/OrderForms";
-import TopChart from "@/components/TopChart";
-import NewReleases from "@/components/NewReleases";
 
 const Index = () => {
-  React.useEffect(() => {
-    // Всегда прокручиваем наверх при загрузке
-    window.scrollTo(0, 0);
-    document.body.classList.add("loaded");
-
-    // Функция для автоматического возврата наверх
-    const handleScroll = () => {
-      // Небольшая задержка для плавности
-      setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 50);
-    };
-
-    // Добавляем обработчик скролла
-    window.addEventListener("scroll", handleScroll);
-
-    // Очищаем обработчик при размонтировании
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900">
       {/* Фиксированный плеер */}
@@ -73,16 +49,6 @@ const Index = () => {
           <div>
             <OrderForms />
           </div>
-        </div>
-
-        {/* Блок топ чарт - сразу после чата */}
-        <div className="mt-8">
-          <TopChart />
-        </div>
-
-        {/* Блок новинок */}
-        <div className="mt-8">
-          <NewReleases />
         </div>
 
         {/* Подвал */}
