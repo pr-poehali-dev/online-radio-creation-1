@@ -128,10 +128,10 @@ const TopChart = () => {
   return (
     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+        <div className="flex items-center gap-2">
           <Icon name="TrendingUp" size={20} />
-          Топ чарт
-        </h3>
+          <span>Топ чарт</span>
+        </div>
         <button
           onClick={() => setIsAddingNew(!isAddingNew)}
           className="text-purple-300 hover:text-white transition-colors"
