@@ -72,11 +72,6 @@ const Index = () => {
           <TopChartPreview />
         </div>
 
-        {/* Новинки песен */}
-        <div className="mt-8">
-          <NewReleases />
-        </div>
-
         {/* Подвал */}
         <div className="text-center mt-12 text-gray-400">
           <p className="text-sm">
