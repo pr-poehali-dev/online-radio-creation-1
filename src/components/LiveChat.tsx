@@ -260,7 +260,6 @@ const LiveChat = () => {
         );
 
         if (availableMessages.length === 0) {
-          // Если все сообщения использованы, очищаем историю
           setUsedMessages(new Set());
           return;
         }
@@ -310,11 +309,11 @@ const LiveChat = () => {
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 h-96 flex flex-col">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <Icon name="MessageCircle" size={20} className="text-purple-300" />
-          <h3 className="text-lg font-semibold text-white">Живой чат</h3>
+    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 h-96 flex flex-col shadow-lg border border-white/20">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <Icon name="MessageCircle" size={24} className="text-purple-300" />
+          <h3 className="text-xl font-semibold text-white">Живой чат</h3>
           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
         </div>
         <div className="flex items-center space-x-2 text-green-400">
@@ -325,7 +324,7 @@ const LiveChat = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-2 mb-3">
+      <div className="flex-1 overflow-y-auto space-y-2 mb-4 scrollbar-thin scrollbar-thumb-purple-400 scrollbar-track-transparent">
         {messages.map((message) => (
           <div key={message.id} className="text-sm">
             <span className="text-purple-300 font-medium">{message.user}:</span>
@@ -336,7 +335,7 @@ const LiveChat = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="flex space-x-2 mb-2">
+      <div className="flex space-x-2 mb-3">
         {emojis.slice(0, 8).map((emoji) => (
           <button
             key={emoji}
@@ -348,14 +347,14 @@ const LiveChat = () => {
         ))}
       </div>
 
-      <div className="flex space-x-2">
+      <div className="flex space-x-3">
         <input
           type="text"
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && sendMessage()}
           placeholder="Напишите сообщение..."
-          className="flex-1 px-3 py-2 bg-white/20 rounded-lg text-white placeholder-purple-200 border border-white/20 focus:border-purple-400 focus:outline-none"
+          className="flex-1 px-4 py-2 bg-white/20 rounded-lg text-white placeholder-purple-200 border border-white/20 focus:border-purple-400 focus:outline-none"
         />
         <button
           onClick={sendMessage}

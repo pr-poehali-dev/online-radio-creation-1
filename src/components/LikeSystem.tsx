@@ -64,26 +64,28 @@ const LikeSystem = () => {
     <div className="flex items-center justify-center space-x-8 mt-6">
       <button
         onClick={handleLike}
-        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
+        className={`flex items-center space-x-3 px-6 py-3 rounded-xl transition-all duration-300 ${
           userLiked === true
-            ? "bg-green-500 text-white"
-            : "bg-white/10 text-purple-200 hover:bg-white/20"
+            ? "bg-green-500 text-white shadow-lg shadow-green-500/30"
+            : "bg-white/10 text-purple-200 hover:bg-white/20 hover:scale-105"
         }`}
       >
         <Icon name="ThumbsUp" size={20} />
-        <span className="font-semibold">{likes.toLocaleString()}</span>
+        <span className="font-semibold text-lg">{likes.toLocaleString()}</span>
       </button>
 
       <button
         onClick={handleDislike}
-        className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
+        className={`flex items-center space-x-3 px-6 py-3 rounded-xl transition-all duration-300 ${
           userLiked === false
-            ? "bg-red-500 text-white"
-            : "bg-white/10 text-purple-200 hover:bg-white/20"
+            ? "bg-red-500 text-white shadow-lg shadow-red-500/30"
+            : "bg-white/10 text-purple-200 hover:bg-white/20 hover:scale-105"
         }`}
       >
         <Icon name="ThumbsDown" size={20} />
-        <span className="font-semibold">{dislikes.toLocaleString()}</span>
+        <span className="font-semibold text-lg">
+          {dislikes.toLocaleString()}
+        </span>
       </button>
     </div>
   );

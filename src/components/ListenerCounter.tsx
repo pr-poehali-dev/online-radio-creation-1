@@ -38,15 +38,20 @@ const ListenerCounter = () => {
   }, []);
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-      <div className="flex items-center justify-center space-x-2 mb-2">
-        <Icon name="Users" size={20} className="text-purple-300" />
-        <span className="text-purple-200">Сейчас слушают</span>
+    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg border border-white/20">
+      <div className="flex items-center justify-center space-x-2 mb-3">
+        <Icon name="Users" size={24} className="text-purple-300" />
+        <span className="text-purple-200 font-medium">Сейчас слушают</span>
       </div>
-      <div className="text-2xl font-bold text-white">
+      <div className="text-3xl font-bold text-white mb-2">
         {listeners.toLocaleString()}
       </div>
-      <div className="w-2 h-2 bg-green-400 rounded-full mx-auto mt-2 animate-pulse"></div>
+      <div className="flex items-center justify-center space-x-2">
+        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+        <span className="text-sm text-gray-300">
+          В режиме реального времени
+        </span>
+      </div>
     </div>
   );
 };

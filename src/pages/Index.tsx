@@ -4,15 +4,12 @@ import ListenerCounter from "@/components/ListenerCounter";
 import LikeSystem from "@/components/LikeSystem";
 import LiveChat from "@/components/LiveChat";
 import OrderForms from "@/components/OrderForms";
-import NewReleases from "@/components/NewReleases";
 
 const Index = () => {
   React.useEffect(() => {
-    // Принудительно устанавливаем позицию скролла вверху при загрузке
     window.scrollTo(0, 0);
     document.body.classList.add("loaded");
 
-    // Предотвращаем скролл до полной загрузки
     const preventScroll = (e: Event) => e.preventDefault();
     window.addEventListener("scroll", preventScroll, { passive: false });
 
@@ -22,7 +19,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 no-scroll-jump">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900">
       {/* Фиксированный плеер */}
       <div className="sticky top-0 z-50 bg-gray-800/90 backdrop-blur-lg border-b border-gray-700/50 shadow-xl">
         <div className="container mx-auto px-4 py-6">
@@ -64,11 +61,6 @@ const Index = () => {
           <div>
             <OrderForms />
           </div>
-        </div>
-
-        {/* Топ чарт превью */}
-        <div className="mt-8">
-          <TopChartPreview />
         </div>
 
         {/* Подвал */}

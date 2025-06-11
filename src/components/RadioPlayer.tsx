@@ -68,13 +68,13 @@ const RadioPlayer = () => {
 
       {/* Центральная информация */}
       <div className="flex-1 text-center">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
-          Radio Noumi
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+          Radio Онлайн
         </h1>
-        <p className="text-gray-600 text-sm mb-2">
-          Слушайте любимую музыку в прямом эфире
+        <p className="text-gray-300 text-sm mb-2">
+          Слушайте лучшую музыку в прямом эфире
         </p>
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-gray-400">
           {isPlaying ? "🎵 В эфире" : "▶️ Нажмите для воспроизведения"}
         </p>
       </div>
