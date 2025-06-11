@@ -1,283 +1,305 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import Icon from "@/components/ui/icon";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface Song {
-  id: number;
-  position: number;
+  id: string;
   title: string;
   artist: string;
-  audioFile?: string;
-  likes: number;
-  dislikes: number;
+  coverUrl: string;
+  audioUrl: string;
   addedAt: Date;
 }
 
 const TopChart = () => {
   const [songs, setSongs] = useState<Song[]>([]);
-  const [isAddingNew, setIsAddingNew] = useState(false);
-  const [currentlyPlaying, setCurrentlyPlaying] = useState<number | null>(null);
-  const [newSong, setNewSong] = useState({
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [currentPlaying, setCurrentPlaying] = useState<string | null>(null);
+  const [audioRefs, setAudioRefs] = useState<{
+    [key: string]: HTMLAudioElement;
+  }>({});
+
+  const [formData, setFormData] = useState({
     title: "",
     artist: "",
-    position: 1,
+    coverFile: null as File | null,
     audioFile: null as File | null,
   });
 
-  const audioRefs = useRef<{ [key: number]: HTMLAudioElement }>({});
-
-  useEffect(() => {
-    const savedSongs = localStorage.getItem("topChartSongs");
-    if (savedSongs) {
-      setSongs(JSON.parse(savedSongs));
-    }
-  }, []);
-
-  const saveSongs = (updatedSongs: Song[]) => {
-    localStorage.setItem("topChartSongs", JSON.stringify(updatedSongs));
-    setSongs(updatedSongs);
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type.startsWith("audio/")) {
-      setNewSong({ ...newSong, audioFile: file });
+  const handleAdminLogin = () => {
+    const password = prompt("Введите пароль администратора:");
+    if (password === "admin123") {
+      setIsAdmin(true);
+      setShowAdminPanel(true);
+    } else {
+      alert("Неверный пароль!");
     }
   };
 
-  const addSong = async () => {
-    if (!newSong.title.trim() || !newSong.artist.trim()) return;
+  const createFileUrl = (file: File) => {
+    return URL.createObjectURL(file);
+  };
 
-    let audioFileUrl = "";
-    if (newSong.audioFile) {
-      audioFileUrl = URL.createObjectURL(newSong.audioFile);
+  const handleAddSong = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (
+      !formData.title ||
+      !formData.artist ||
+      !formData.coverFile ||
+      !formData.audioFile
+    ) {
+      alert("Заполните все поля!");
+      return;
     }
 
-    const song: Song = {
-      id: Date.now(),
-      position: newSong.position,
-      title: newSong.title.trim(),
-      artist: newSong.artist.trim(),
-      audioFile: audioFileUrl,
-      likes: 0,
-      dislikes: 0,
+    const newSong: Song = {
+      id: Date.now().toString(),
+      title: formData.title,
+      artist: formData.artist,
+      coverUrl: createFileUrl(formData.coverFile),
+      audioUrl: createFileUrl(formData.audioFile),
       addedAt: new Date(),
     };
 
-    const updatedSongs = [...songs, song].sort(
-      (a, b) => a.position - b.position,
-    );
-    saveSongs(updatedSongs);
-
-    setNewSong({ title: "", artist: "", position: 1, audioFile: null });
-    setIsAddingNew(false);
+    setSongs((prev) => [newSong, ...prev]);
+    setFormData({ title: "", artist: "", coverFile: null, audioFile: null });
   };
 
-  const removeSong = (id: number) => {
-    const updatedSongs = songs.filter((song) => song.id !== id);
-    saveSongs(updatedSongs);
-  };
-
-  const togglePlay = (songId: number) => {
-    const audio = audioRefs.current[songId];
-    if (!audio) return;
-
-    // Остановить все другие треки
-    Object.entries(audioRefs.current).forEach(([id, audioEl]) => {
-      if (parseInt(id) !== songId) {
-        audioEl.pause();
-        audioEl.currentTime = 0;
+  const handlePlayPause = (songId: string, audioUrl: string) => {
+    // Останавливаем все остальные треки
+    Object.values(audioRefs).forEach((audio) => {
+      if (audio && !audio.paused) {
+        audio.pause();
+        audio.currentTime = 0;
       }
     });
 
-    if (currentlyPlaying === songId) {
-      audio.pause();
-      setCurrentlyPlaying(null);
-    } else {
-      audio.play();
-      setCurrentlyPlaying(songId);
+    if (currentPlaying === songId) {
+      setCurrentPlaying(null);
+      return;
     }
+
+    // Создаем новый аудио элемент если его нет
+    if (!audioRefs[songId]) {
+      const audio = new Audio(audioUrl);
+      audio.addEventListener("ended", () => {
+        setCurrentPlaying(null);
+      });
+      setAudioRefs((prev) => ({ ...prev, [songId]: audio }));
+    }
+
+    audioRefs[songId].play();
+    setCurrentPlaying(songId);
   };
 
-  const handleLike = (songId: number, isLike: boolean) => {
-    const updatedSongs = songs.map((song) => {
-      if (song.id === songId) {
-        return {
-          ...song,
-          likes: isLike ? song.likes + 1 : song.likes,
-          dislikes: !isLike ? song.dislikes + 1 : song.dislikes,
-        };
-      }
-      return song;
+  const removeSong = (songId: string) => {
+    if (audioRefs[songId]) {
+      audioRefs[songId].pause();
+      URL.revokeObjectURL(audioRefs[songId].src);
+    }
+    setSongs((prev) => prev.filter((song) => song.id !== songId));
+    setAudioRefs((prev) => {
+      const newRefs = { ...prev };
+      delete newRefs[songId];
+      return newRefs;
     });
-    saveSongs(updatedSongs);
-  };
-
-  const getPositionIcon = (position: number) => {
-    switch (position) {
-      case 1:
-        return "🥇";
-      case 2:
-        return "🥈";
-      case 3:
-        return "🥉";
-      default:
-        return `${position}.`;
+    if (currentPlaying === songId) {
+      setCurrentPlaying(null);
     }
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Icon name="TrendingUp" size={20} />
-          <span>Топ чарт</span>
-        </div>
-        <button
-          onClick={() => setIsAddingNew(!isAddingNew)}
-          className="text-purple-300 hover:text-white transition-colors"
-        >
-          <Icon name="Plus" size={20} />
-        </button>
+    <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-700/50">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <Icon name="Trophy" size={24} className="text-yellow-500" />
+          Топ Чарт
+        </h2>
+
+        {!isAdmin && (
+          <Button
+            onClick={handleAdminLogin}
+            variant="outline"
+            size="sm"
+            className="bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600"
+          >
+            <Icon name="Settings" size={16} className="mr-2" />
+            Админ
+          </Button>
+        )}
       </div>
 
-      {isAddingNew && (
-        <div className="mb-4 p-3 bg-white/5 rounded-lg border border-purple-300/20">
-          <div className="space-y-3">
-            <input
-              type="text"
-              placeholder="Название трека"
-              value={newSong.title}
-              onChange={(e) =>
-                setNewSong({ ...newSong, title: e.target.value })
-              }
-              className="w-full px-3 py-2 bg-white/10 border border-purple-300/30 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:border-purple-300"
-            />
-            <input
-              type="text"
-              placeholder="Исполнитель"
-              value={newSong.artist}
-              onChange={(e) =>
-                setNewSong({ ...newSong, artist: e.target.value })
-              }
-              className="w-full px-3 py-2 bg-white/10 border border-purple-300/30 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:border-purple-300"
-            />
-            <input
-              type="number"
-              placeholder="Позиция"
-              min="1"
-              value={newSong.position}
-              onChange={(e) =>
-                setNewSong({
-                  ...newSong,
-                  position: parseInt(e.target.value) || 1,
-                })
-              }
-              className="w-full px-3 py-2 bg-white/10 border border-purple-300/30 rounded-lg text-white placeholder-purple-300 focus:outline-none focus:border-purple-300"
-            />
-            <div className="space-y-2">
-              <label className="block text-purple-300 text-sm">
-                Загрузить аудиофайл
-              </label>
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleFileSelect}
-                className="w-full px-3 py-2 bg-white/10 border border-purple-300/30 rounded-lg text-white file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-purple-600 file:text-white hover:file:bg-purple-700"
-              />
-              {newSong.audioFile && (
-                <p className="text-purple-300 text-xs">
-                  Выбран файл: {newSong.audioFile.name}
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={addSong}
-                className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-              >
-                Добавить
-              </button>
-              <button
-                onClick={() => setIsAddingNew(false)}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 text-purple-300 rounded-lg transition-colors"
-              >
-                Отмена
-              </button>
-            </div>
+      {/* Админ панель */}
+      {isAdmin && showAdminPanel && (
+        <div className="mb-6 p-4 bg-gray-700/50 rounded-xl border border-gray-600/50">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">Добавить трек</h3>
+            <Button
+              onClick={() => setShowAdminPanel(false)}
+              variant="ghost"
+              size="sm"
+              className="text-gray-400 hover:text-white"
+            >
+              <Icon name="X" size={16} />
+            </Button>
           </div>
+
+          <form onSubmit={handleAddSong} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="title" className="text-gray-300">
+                  Название
+                </Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, title: e.target.value }))
+                  }
+                  className="bg-gray-600/50 border-gray-500 text-white"
+                  placeholder="Название трека"
+                />
+              </div>
+              <div>
+                <Label htmlFor="artist" className="text-gray-300">
+                  Исполнитель
+                </Label>
+                <Input
+                  id="artist"
+                  value={formData.artist}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, artist: e.target.value }))
+                  }
+                  className="bg-gray-600/50 border-gray-500 text-white"
+                  placeholder="Имя исполнителя"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="cover" className="text-gray-300">
+                  Обложка
+                </Label>
+                <Input
+                  id="cover"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      coverFile: e.target.files?.[0] || null,
+                    }))
+                  }
+                  className="bg-gray-600/50 border-gray-500 text-white"
+                />
+              </div>
+              <div>
+                <Label htmlFor="audio" className="text-gray-300">
+                  Аудиофайл
+                </Label>
+                <Input
+                  id="audio"
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      audioFile: e.target.files?.[0] || null,
+                    }))
+                  }
+                  className="bg-gray-600/50 border-gray-500 text-white"
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+            >
+              <Icon name="Plus" size={16} className="mr-2" />
+              Добавить в топ
+            </Button>
+          </form>
         </div>
       )}
 
-      <div className="space-y-2 max-h-64 overflow-y-auto">
+      {/* Список треков */}
+      <div className="space-y-3">
         {songs.length === 0 ? (
-          <p className="text-purple-300 text-sm text-center py-4">
-            Пока нет треков в чарте
-          </p>
+          <div className="text-center py-8 text-gray-400">
+            <Icon name="Music" size={48} className="mx-auto mb-3 opacity-50" />
+            <p>Топ чарт пуст</p>
+            {isAdmin && (
+              <Button
+                onClick={() => setShowAdminPanel(true)}
+                variant="ghost"
+                className="mt-2 text-yellow-500 hover:text-yellow-400"
+              >
+                Добавить первый трек
+              </Button>
+            )}
+          </div>
         ) : (
-          songs.map((song) => (
+          songs.map((song, index) => (
             <div
               key={song.id}
-              className="flex items-center gap-3 p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-colors group"
+              className="flex items-center gap-3 p-3 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-colors"
             >
-              <span className="text-lg font-bold text-purple-300 min-w-[2rem]">
-                {getPositionIcon(song.position)}
-              </span>
-
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-medium text-sm truncate">
-                  {song.title}
-                </p>
-                <p className="text-purple-300 text-xs truncate">
-                  {song.artist}
-                </p>
+              {/* Номер в чарте */}
+              <div className="text-yellow-500 font-bold text-lg w-6 text-center">
+                {index + 1}
               </div>
 
-              {/* Плеер */}
-              {song.audioFile && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => togglePlay(song.id)}
-                    className="text-purple-300 hover:text-white transition-colors"
-                  >
-                    <Icon
-                      name={currentlyPlaying === song.id ? "Pause" : "Play"}
-                      size={16}
-                    />
-                  </button>
-                  <audio
-                    ref={(el) => {
-                      if (el) audioRefs.current[song.id] = el;
-                    }}
-                    src={song.audioFile}
-                    onEnded={() => setCurrentlyPlaying(null)}
+              {/* Обложка с плеером */}
+              <div className="relative group">
+                <img
+                  src={song.coverUrl}
+                  alt={song.title}
+                  className="w-12 h-12 rounded-lg object-cover cursor-pointer"
+                  onClick={() => handlePlayPause(song.id, song.audioUrl)}
+                />
+
+                {/* Кнопка воспроизведения на обложке */}
+                <div
+                  className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={() => handlePlayPause(song.id, song.audioUrl)}
+                >
+                  <Icon
+                    name={currentPlaying === song.id ? "Pause" : "Play"}
+                    size={20}
+                    className="text-white"
                   />
                 </div>
-              )}
 
-              {/* Лайки/дизлайки */}
-              <div className="flex items-center gap-2 text-xs">
-                <button
-                  onClick={() => handleLike(song.id, true)}
-                  className="flex items-center gap-1 text-green-400 hover:text-green-300 transition-colors"
-                >
-                  <Icon name="ThumbsUp" size={14} />
-                  <span>{song.likes}</span>
-                </button>
-                <button
-                  onClick={() => handleLike(song.id, false)}
-                  className="flex items-center gap-1 text-red-400 hover:text-red-300 transition-colors"
-                >
-                  <Icon name="ThumbsDown" size={14} />
-                  <span>{song.dislikes}</span>
-                </button>
+                {/* Индикатор воспроизведения */}
+                {currentPlaying === song.id && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                )}
               </div>
 
-              <button
-                onClick={() => removeSong(song.id)}
-                className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all"
-              >
-                <Icon name="X" size={16} />
-              </button>
+              {/* Информация о треке */}
+              <div className="flex-1 min-w-0">
+                <h4 className="text-white font-medium truncate">
+                  {song.title}
+                </h4>
+                <p className="text-gray-400 text-sm truncate">{song.artist}</p>
+              </div>
+
+              {/* Кнопка удаления для админа */}
+              {isAdmin && (
+                <Button
+                  onClick={() => removeSong(song.id)}
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                >
+                  <Icon name="Trash2" size={16} />
+                </Button>
+              )}
             </div>
           ))
         )}

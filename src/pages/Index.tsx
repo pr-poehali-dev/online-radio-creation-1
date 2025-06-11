@@ -4,6 +4,7 @@ import ListenerCounter from "@/components/ListenerCounter";
 import LikeSystem from "@/components/LikeSystem";
 import LiveChat from "@/components/LiveChat";
 import OrderForms from "@/components/OrderForms";
+import TopChart from "@/components/TopChart";
 import NewReleases from "@/components/NewReleases";
 
 const Index = () => {
@@ -64,7 +65,12 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Блок новинок - сразу после чата */}
+        {/* Блок топ чарт - сразу после чата */}
+        <div className="mt-8">
+          <TopChart />
+        </div>
+
+        {/* Блок новинок */}
         <div className="mt-8">
           <NewReleases />
         </div>
