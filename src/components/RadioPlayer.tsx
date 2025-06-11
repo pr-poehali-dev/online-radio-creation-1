@@ -51,7 +51,7 @@ const RadioPlayer = () => {
   return (
     <div className="flex flex-col items-center space-y-4">
       <div className="text-center mb-4">
-        <h1 className="text-3xl font-bold text-white mb-2">Онлайн Радио 🎵</h1>
+        <h1 className="text-3xl font-bold text-white mb-2">Radio Noumi</h1>
         <p className="text-purple-200">
           Слушайте любимую музыку в прямом эфире
         </p>
