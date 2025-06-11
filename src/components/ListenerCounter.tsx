@@ -2,19 +2,19 @@ import React, { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
 const ListenerCounter = () => {
-  const [listeners, setListeners] = useState(100000);
+  const [listeners, setListeners] = useState(100000000);
 
   useEffect(() => {
     const interval = setInterval(
       () => {
         setListeners((prev) => {
           const change =
-            Math.random() > 0.6
-              ? Math.floor(Math.random() * 5) + 1
-              : Math.random() > 0.8
-                ? -Math.floor(Math.random() * 3)
+            Math.random() > 0.5
+              ? Math.floor(Math.random() * 50000) + 1000
+              : Math.random() > 0.3
+                ? -Math.floor(Math.random() * 30000)
                 : 0;
-          return Math.max(99500, prev + change);
+          return Math.max(1000000, prev + change);
         });
       },
       3000 + Math.random() * 2000,
