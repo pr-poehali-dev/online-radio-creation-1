@@ -16,106 +16,153 @@ const LiveChat = () => {
     `Пользователь${Math.floor(Math.random() * 1000)}`,
   );
   const [onlineUsers, setOnlineUsers] = useState(10000);
+  const [usedMessages, setUsedMessages] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const sampleMessages = [
+  const conversationPairs = [
+    { user: "Дмитрий Козлов", text: "Привет всем! Как дела?", emoji: "👋" },
     {
-      user: "Дмитрий Козлов",
-      text: "Какая классная песня играет!",
+      user: "Анна Иванова",
+      text: "Привет Дима! Все отлично, слушаю радио",
       emoji: "🎵",
     },
     {
-      user: "Елена Петрова",
-      text: "Привет всем в чате! Как дела?",
-      emoji: "👋",
+      user: "Сергей Петров",
+      text: "Какая сейчас песня играет? Очень нравится!",
+      emoji: "❤️",
     },
     {
-      user: "Александр Смирнов",
+      user: "Елена Смирнова",
+      text: "Это новый хит! Тоже в восторге",
+      emoji: "🔥",
+    },
+    {
+      user: "Александр Волков",
+      text: "Кто-нибудь знает исполнителя?",
+      emoji: "🤔",
+    },
+    {
+      user: "Ольга Морозова",
+      text: "Это группа StarLight! Классные ребята",
+      emoji: "⭐",
+    },
+    {
+      user: "Игорь Лебедев",
+      text: "Спасибо Оля! Буду искать их альбомы",
+      emoji: "🙏",
+    },
+    {
+      user: "Мария Новикова",
+      text: "У них есть отличная песня Ocean Dreams",
+      emoji: "🌊",
+    },
+    { user: "Андрей Козлов", text: "Познакомимся? Я из Москвы", emoji: "😊" },
+    {
+      user: "Татьяна Белова",
+      text: "Привет Андрей! Я из СПБ, тоже люблю музыку",
+      emoji: "💫",
+    },
+    {
+      user: "Владимир Орлов",
       text: "Можно заказать что-то из рока?",
       emoji: "🤘",
     },
     {
-      user: "Анна Иванова",
-      text: "Эта музыка поднимает настроение!",
-      emoji: "💃",
+      user: "Наталья Павлова",
+      text: "Поддерживаю! Хочется энергичного",
+      emoji: "⚡",
     },
     {
-      user: "Петр Соколов",
-      text: "Отличное радио, слушаю каждый день",
-      emoji: "❤️",
-    },
-    { user: "Мария Волкова", text: "Есть кто из Москвы в чате?", emoji: "🏙️" },
-    { user: "Игорь Морозов", text: "Этот трек просто огонь!", emoji: "🔥" },
-    {
-      user: "София Кузнецова",
-      text: "Спасибо за такую атмосферу!",
-      emoji: "🙏",
+      user: "Денис Соколов",
+      text: "А мне нравится текущий плейлист",
+      emoji: "👍",
     },
     {
-      user: "Максим Новиков",
+      user: "Юлия Федорова",
+      text: "Согласна с Денисом, отличная подборка",
+      emoji: "💎",
+    },
+    {
+      user: "Максим Захаров",
       text: "Слушаю уже третий час подряд",
-      emoji: "😊",
+      emoji: "⏰",
     },
     {
-      user: "Ольга Федорова",
-      text: "Познакомимся? Я из Санкт-Петербурга",
-      emoji: "😘",
-    },
-    {
-      user: "Артем Лебедев",
-      text: "Привет Оля! Тоже люблю хорошую музыку",
-      emoji: "😎",
-    },
-    {
-      user: "Татьяна Орлова",
-      text: "Какая сейчас песня? Очень нравится!",
+      user: "София Тихонова",
+      text: "Максим, а что больше всего понравилось?",
       emoji: "🎶",
     },
     {
-      user: "Сергей Павлов",
-      text: "Идеально для работы подходит",
-      emoji: "💻",
-    },
-    {
-      user: "Наталья Белова",
-      text: "А танцевальной музыки будет?",
-      emoji: "🕺",
-    },
-    {
-      user: "Владимир Зайцев",
+      user: "Роман Степанов",
       text: "Это радио - настоящая находка!",
       emoji: "✨",
     },
-    { user: "Юлия Романова", text: "Отличное качество звука", emoji: "🎧" },
     {
-      user: "Андрей Васильев",
+      user: "Екатерина Попова",
+      text: "Полностью согласна! Качество супер",
+      emoji: "🎧",
+    },
+    {
+      user: "Никита Медведев",
+      text: "Есть кто из Казани в чате?",
+      emoji: "🏙️",
+    },
+    { user: "Алиса Макарова", text: "Я из Казани! Привет земляк", emoji: "👋" },
+    {
+      user: "Константин Григорьев",
+      text: "Какая атмосферная музыка сегодня",
+      emoji: "🌟",
+    },
+    { user: "Полина Васильева", text: "Да, очень расслабляющая", emoji: "😌" },
+    {
+      user: "Артем Жуков",
+      text: "А можно больше танцевальной музыки?",
+      emoji: "💃",
+    },
+    {
+      user: "Виктория Романова",
+      text: "Артем, тоже хочется потанцевать!",
+      emoji: "🕺",
+    },
+    {
+      user: "Павел Зайцев",
+      text: "Слушаю во время работы, очень помогает",
+      emoji: "💻",
+    },
+    { user: "Светлана Медведева", text: "Пав, а что за работа?", emoji: "🤓" },
+    {
+      user: "Михаил Орлов",
+      text: "Этот трек напоминает мне юность",
+      emoji: "🌈",
+    },
+    { user: "Дарья Кузнецова", text: "Миша, а сколько тебе лет?", emoji: "😄" },
+    {
+      user: "Олег Титов",
       text: "Можно заказать классическую музыку?",
       emoji: "🎻",
     },
     {
-      user: "Екатерина Жукова",
-      text: "Слушаю во время тренировки",
-      emoji: "💪",
+      user: "Ирина Никитина",
+      text: "Олег, поддерживаю! Бах или Моцарт",
+      emoji: "🎼",
     },
-    { user: "Никита Медведев", text: "Крутой плейлист сегодня", emoji: "🔥" },
-    { user: "Виктория Захарова", text: "Привет из Казани!", emoji: "👋" },
-    { user: "Роман Тихонов", text: "Эта песня напоминает юность", emoji: "🌟" },
+  ];
+
+  const singleMessages = [
+    { user: "Вадим Серов", text: "Отличное качество звука", emoji: "🔊" },
+    { user: "Кристина Белкина", text: "Слушаю каждый день!", emoji: "📅" },
+    { user: "Глеб Морозов", text: "Это лучшее радио!", emoji: "🏆" },
+    { user: "Лариса Королева", text: "Спасибо за такую музыку", emoji: "💝" },
+    { user: "Тимур Алексеев", text: "Настроение на высоте", emoji: "☀️" },
+    { user: "Вера Сидорова", text: "Музыка для души", emoji: "💖" },
     {
-      user: "Алиса Макарова",
-      text: "Спасибо за отличное настроение",
-      emoji: "☀️",
+      user: "Руслан Иванов",
+      text: "Класс! Продолжайте в том же духе",
+      emoji: "👏",
     },
-    { user: "Константин Попов", text: "Слушаю каждый вечер", emoji: "🌙" },
-    {
-      user: "Полина Григорьева",
-      text: "Какая атмосферная музыка",
-      emoji: "💫",
-    },
-    {
-      user: "Денис Степанов",
-      text: "Можно больше современных хитов?",
-      emoji: "🎤",
-    },
+    { user: "Камилла Петрова", text: "Идеально для вечера", emoji: "🌙" },
+    { user: "Борис Козин", text: "Хит за хитом!", emoji: "🎯" },
+    { user: "Злата Волкова", text: "Обожаю это радио", emoji: "😍" },
   ];
 
   const emojis = [
@@ -135,9 +182,10 @@ const LiveChat = () => {
     "😘",
   ];
 
-  // Загружаем сохраненные сообщения при загрузке
   useEffect(() => {
     const savedMessages = localStorage.getItem("radioNoumi_chatMessages");
+    const savedUsedMessages = localStorage.getItem("radioNoumi_usedMessages");
+
     if (savedMessages) {
       const parsedMessages = JSON.parse(savedMessages).map((msg: any) => ({
         ...msg,
@@ -145,18 +193,26 @@ const LiveChat = () => {
       }));
       setMessages(parsedMessages);
     }
+
+    if (savedUsedMessages) {
+      setUsedMessages(new Set(JSON.parse(savedUsedMessages)));
+    }
   }, []);
 
-  // Сохраняем сообщения в localStorage при изменении
   useEffect(() => {
     if (messages.length > 0) {
       localStorage.setItem("radioNoumi_chatMessages", JSON.stringify(messages));
     }
   }, [messages]);
 
-  // Управляем счетчиком онлайн пользователей
   useEffect(() => {
-    // Загружаем сохраненное количество пользователей
+    localStorage.setItem(
+      "radioNoumi_usedMessages",
+      JSON.stringify([...usedMessages]),
+    );
+  }, [usedMessages]);
+
+  useEffect(() => {
     const savedUsers = localStorage.getItem("radioNoumi_onlineUsers");
     const savedTimestamp = localStorage.getItem("radioNoumi_lastUpdate");
 
@@ -178,13 +234,11 @@ const LiveChat = () => {
         setOnlineUsers(parseInt(savedUsers));
       }
     } else {
-      // Первый запуск - устанавливаем 10,000
       setOnlineUsers(10000);
       localStorage.setItem("radioNoumi_onlineUsers", "10000");
       localStorage.setItem("radioNoumi_lastUpdate", new Date().toISOString());
     }
 
-    // Обновляем каждый час
     const interval = setInterval(() => {
       setOnlineUsers((prev) => {
         const newCount = prev + Math.floor(Math.random() * 50 + 20);
@@ -192,41 +246,47 @@ const LiveChat = () => {
         localStorage.setItem("radioNoumi_lastUpdate", new Date().toISOString());
         return newCount;
       });
-    }, 3600000); // 1 час = 3,600,000 мс
+    }, 3600000);
 
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    // Добавляем случайные сообщения с проверкой на дубликаты
     const interval = setInterval(
       () => {
-        const randomMessage =
-          sampleMessages[Math.floor(Math.random() * sampleMessages.length)];
-
-        // Проверяем, не было ли такого же сообщения в последних 10
-        const recentMessages = messages.slice(-10);
-        const isDuplicate = recentMessages.some(
-          (msg) =>
-            msg.text === randomMessage.text && msg.user === randomMessage.user,
+        const allMessages = [...conversationPairs, ...singleMessages];
+        const availableMessages = allMessages.filter(
+          (msg) => !usedMessages.has(`${msg.user}:${msg.text}`),
         );
 
-        if (!isDuplicate) {
-          const newMsg: Message = {
-            id: Date.now() + Math.random(),
-            user: randomMessage.user,
-            text: randomMessage.text,
-            timestamp: new Date(),
-            emoji: randomMessage.emoji,
-          };
-          setMessages((prev) => [...prev, newMsg]);
+        if (availableMessages.length === 0) {
+          // Если все сообщения использованы, очищаем историю
+          setUsedMessages(new Set());
+          return;
         }
+
+        const randomMessage =
+          availableMessages[
+            Math.floor(Math.random() * availableMessages.length)
+          ];
+        const messageKey = `${randomMessage.user}:${randomMessage.text}`;
+
+        const newMsg: Message = {
+          id: Date.now() + Math.random(),
+          user: randomMessage.user,
+          text: randomMessage.text,
+          timestamp: new Date(),
+          emoji: randomMessage.emoji,
+        };
+
+        setMessages((prev) => [...prev, newMsg]);
+        setUsedMessages((prev) => new Set([...prev, messageKey]));
       },
       3000 + Math.random() * 5000,
     );
 
     return () => clearInterval(interval);
-  }, [messages]);
+  }, [usedMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -270,6 +330,7 @@ const LiveChat = () => {
           <div key={message.id} className="text-sm">
             <span className="text-purple-300 font-medium">{message.user}:</span>
             <span className="text-white ml-2">{message.text}</span>
+            {message.emoji && <span className="ml-1">{message.emoji}</span>}
           </div>
         ))}
         <div ref={messagesEndRef} />

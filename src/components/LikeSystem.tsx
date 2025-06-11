@@ -10,12 +10,12 @@ const LikeSystem = () => {
     // Лайки каждый час +1-2
     const likeInterval = setInterval(() => {
       setLikes((prev) => prev + Math.floor(Math.random() * 2) + 1);
-    }, 3600000); // 1 час
+    }, 3600000);
 
     // Дизлайки каждые 10 часов +1
     const dislikeInterval = setInterval(() => {
       setDislikes((prev) => prev + 1);
-    }, 36000000); // 10 часов
+    }, 36000000);
 
     // Для демонстрации - ускоренные интервалы
     const demoLikeInterval = setInterval(() => {

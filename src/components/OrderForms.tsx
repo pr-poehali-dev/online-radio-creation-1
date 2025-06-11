@@ -75,7 +75,7 @@ _Заказ поступил: ${new Date().toLocaleString("ru-RU")}_`;
       <h3 className="text-xl font-semibold text-white mb-4">Интерактив 🎤</h3>
 
       {/* Кнопки форм */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <button
           onClick={() => setActiveForm(activeForm === "track" ? null : "track")}
           className="flex items-center space-x-2 p-4 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
