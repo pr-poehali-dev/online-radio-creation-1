@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Icon from "@/components/ui/icon";
+import emailjs from "@emailjs/browser";
 
 const OrderForms = () => {
   const [activeForm, setActiveForm] = useState<string | null>(null);
@@ -14,28 +15,100 @@ const OrderForms = () => {
     contact: "",
     description: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleTrackSubmit = (e: React.FormEvent) => {
+  // Инициализация EmailJS
+  React.useEffect(() => {
+    emailjs.init("YOUR_PUBLIC_KEY"); // Замените на ваш Public Key из EmailJS
+  }, []);
+
+  const handleTrackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(
-      `Заказ принят! Трек "${trackOrder.track}" будет воспроизведён в ${trackOrder.time}`,
-    );
-    setTrackOrder({ track: "", time: "" });
-    setActiveForm(null);
+    setIsSubmitting(true);
+
+    try {
+      await emailjs.send(
+        "YOUR_SERVICE_ID", // Замените на ваш Service ID
+        "YOUR_TEMPLATE_ID", // Замените на ваш Template ID
+        {
+          to_email: "toly.akuloff@yandex.ru",
+          subject: "🎵 Заказ трека с радиостанции",
+          message: `Новый заказ трека:
+
+Трек: ${trackOrder.track}
+Желаемое время: ${trackOrder.time}
+
+Заказ поступил: ${new Date().toLocaleString("ru-RU")}`,
+        },
+      );
+
+      alert(
+        `Заказ принят! Трек "${trackOrder.track}" будет воспроизведён в ${trackOrder.time}`,
+      );
+      setTrackOrder({ track: "", time: "" });
+      setActiveForm(null);
+    } catch (error) {
+      console.error("Ошибка отправки:", error);
+      alert("Произошла ошибка при отправке заказа. Попробуйте ещё раз.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleGreetingSubmit = (e: React.FormEvent) => {
+  const handleGreetingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Привет от ${greeting.fromName} для ${greeting.toName} отправлен!`);
-    setGreeting({ fromName: "", toName: "", message: "" });
-    setActiveForm(null);
+    setIsSubmitting(true);
+
+    try {
+      await emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+        to_email: "toly.akuloff@yandex.ru",
+        subject: "💌 Новый привет с радиостанции",
+        message: `Новое сообщение-привет:
+
+От: ${greeting.fromName}
+Для: ${greeting.toName}
+Сообщение: ${greeting.message}
+
+Отправлено: ${new Date().toLocaleString("ru-RU")}`,
+      });
+
+      alert(`Привет от ${greeting.fromName} для ${greeting.toName} отправлен!`);
+      setGreeting({ fromName: "", toName: "", message: "" });
+      setActiveForm(null);
+    } catch (error) {
+      console.error("Ошибка отправки:", error);
+      alert("Произошла ошибка при отправке привета. Попробуйте ещё раз.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSongSubmit = (e: React.FormEvent) => {
+  const handleSongSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Заказ песни от ${songRequest.name} принят! Мы свяжемся с вами.`);
-    setSongRequest({ name: "", contact: "", description: "" });
-    setActiveForm(null);
+    setIsSubmitting(true);
+
+    try {
+      await emailjs.send("YOUR_SERVICE_ID", "YOUR_TEMPLATE_ID", {
+        to_email: "toly.akuloff@yandex.ru",
+        subject: "🎤 Заказ собственной песни",
+        message: `Заказ собственной песни:
+
+Имя: ${songRequest.name}
+Контакт: ${songRequest.contact}
+Описание песни: ${songRequest.description}
+
+Заказ поступил: ${new Date().toLocaleString("ru-RU")}`,
+      });
+
+      alert(`Заказ песни от ${songRequest.name} принят! Мы свяжемся с вами.`);
+      setSongRequest({ name: "", contact: "", description: "" });
+      setActiveForm(null);
+    } catch (error) {
+      console.error("Ошибка отправки:", error);
+      alert("Произошла ошибка при отправке заказа песни. Попробуйте ещё раз.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -100,9 +173,10 @@ const OrderForms = () => {
           />
           <button
             type="submit"
-            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+            disabled={isSubmitting}
+            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Отправить заказ
+            {isSubmitting ? "Отправка..." : "Отправить заказ"}
           </button>
         </form>
       )}
@@ -145,9 +219,10 @@ const OrderForms = () => {
           />
           <button
             type="submit"
-            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+            disabled={isSubmitting}
+            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Отправить привет
+            {isSubmitting ? "Отправка..." : "Отправить привет"}
           </button>
         </form>
       )}
@@ -195,9 +270,10 @@ const OrderForms = () => {
           />
           <button
             type="submit"
-            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+            disabled={isSubmitting}
+            className="w-full py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Отправить заказ
+            {isSubmitting ? "Отправка..." : "Отправить заказ"}
           </button>
         </form>
       )}
