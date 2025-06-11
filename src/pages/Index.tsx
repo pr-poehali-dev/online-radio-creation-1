@@ -8,6 +8,20 @@ import TopChart from "@/components/TopChart";
 import NewReleases from "@/components/NewReleases";
 
 const Index = () => {
+  React.useEffect(() => {
+    // Принудительно устанавливаем позицию скролла вверху при загрузке
+    window.scrollTo(0, 0);
+    document.body.classList.add("loaded");
+
+    // Предотвращаем скролл до полной загрузки
+    const preventScroll = (e: Event) => e.preventDefault();
+    window.addEventListener("scroll", preventScroll, { passive: false });
+
+    setTimeout(() => {
+      window.removeEventListener("scroll", preventScroll);
+    }, 100);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900 no-scroll-jump">
       {/* Фиксированный плеер */}

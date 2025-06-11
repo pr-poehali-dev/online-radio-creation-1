@@ -98,6 +98,7 @@
   body {
     @apply bg-background text-foreground;
     scroll-behavior: smooth;
+    overflow-anchor: none;
   }
 
   html {
@@ -117,5 +118,17 @@
   /* Фиксация позиции при перезагрузке */
   html {
     scroll-restoration: manual;
+  }
+}
+
+/* Предотвращение скролла при загрузке */
+@layer utilities {
+  .no-scroll-jump {
+    scroll-behavior: auto;
+    overscroll-behavior: contain;
+  }
+
+  body:not(.loaded) {
+    overflow: hidden;
   }
 }
